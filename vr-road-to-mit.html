@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Road to MIT</title>
+<style>
+/* Import Noto Serif Display */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+/* ==========================================================================
+   TOKENS & CSS VARIABLES (LIGHT BLUE THEME)
+   ========================================================================== */
+:root {
+  --bg-base: #F0F4F8;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F8FAFC;
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+  
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --text-inverse: #FFFFFF;
+  
+  --accent: #3B82F6;       /* Blue 500 */
+  --accent-hover: #2563EB; /* Blue 600 */
+  --accent-light: rgba(59, 130, 246, 0.1);
+  --accent-shadow: rgba(59, 130, 246, 0.3);
+  
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --danger-light: rgba(239, 68, 68, 0.1);
+  
+  /* Modern Standard Font Stack */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+a:hover { color: var(--accent-hover); }
+*:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-shadow); border-color: var(--accent); border-radius: 4px; }
+
+#app { display: flex; min-height: 100vh; flex-direction: column; }
+@media (min-width: 768px) { #app { flex-direction: row; } }
+
+/* Layout & Navigation */
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 10; }
+
+/* Interactive Brand Styling */
+.brand { 
+  font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem; 
+  cursor: pointer; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+.brand:hover { transform: scale(1.03); }
+.brand:active { transform: scale(0.97); }
+
+.brand-text { font-family: 'Noto Serif Display', serif; font-style: italic; }
+.brand-logo { height: 68px; width: auto; object-fit: contain; }
+
+.save-indicator { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; }
+.save-indicator::before { content: "●"; color: var(--accent); font-size: 0.5rem; animation: pulse 2s infinite; }
+
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+.nav { background: var(--bg-surface); border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-around; padding: 0.5rem 0; position: fixed; bottom: 0; width: 100%; z-index: 20; }
+@media (min-width: 768px) {
+  .topbar { display: none; }
+  .nav { position: static; flex-direction: column; width: 250px; border-top: none; border-right: 1px solid var(--border-subtle); justify-content: flex-start; padding: 2rem 1rem; gap: 0.5rem; box-shadow: var(--shadow-sm); }
+}
+
+.nav-brand { display: none; margin-bottom: 2rem; font-size: 1.25rem; }
+@media (min-width: 768px) { .nav-brand { display: flex; } }
+
+.nav-link { color: var(--text-secondary); padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem; font-weight: 500; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 0.5rem; }
+.nav-link:hover { background: var(--bg-elevated); color: var(--accent); transform: translateX(2px); }
+.nav-link.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+@media (max-width: 767px) { .nav-link:hover { transform: translateY(-2px); } }
+
+.main-wrapper { flex: 1; display: flex; flex-direction: column; }
+.main-content { flex: 1; padding: 1.5rem 1rem 5rem 1rem; max-width: 1200px; margin: 0 auto; width: 100%; animation: fadeIn 0.3s ease-out; }
+@media (min-width: 768px) { .main-content { padding: 2rem 3rem; } }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Cards & UI Elements */
+.card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease; }
+.card:hover { box-shadow: var(--shadow-md); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.card-title, #page-title { font-weight: 700; color: var(--text-primary); letter-spacing: normal; }
+#page-title { font-size: 1.75rem; }
+.card-title { font-size: 1.125rem; }
+
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.text-primary { color: var(--text-primary); }
+
+/* Motivational Quote */
+.quote-card { background: linear-gradient(to right, var(--accent-light), var(--bg-surface)); border-left: 4px solid var(--accent); padding: 1.25rem 1.5rem; border-radius: 0 12px 12px 0; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); }
+.quote-text { font-family: Georgia, 'Times New Roman', Times, serif; font-style: italic; font-size: 1.15rem; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.6; }
+.quote-author { font-weight: 600; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Modernized Forms */
+input[type="text"], input[type="date"], input[type="week"], input[type="month"] { background: var(--bg-elevated); border: 1px solid var(--border-strong); color: var(--text-primary); padding: 0.75rem 1rem; border-radius: 8px; width: 100%; font-family: inherit; transition: all 0.2s; }
+input:focus { background: var(--bg-surface); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); outline: none; }
+input[type="checkbox"] { width: 1.25rem; height: 1.25rem; accent-color: var(--accent); cursor: pointer; border-radius: 4px; transition: transform 0.2s; }
+input[type="checkbox"]:active { transform: scale(0.9); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; font-family: inherit; user-select: none; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: var(--text-inverse); box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--accent-hover); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.btn-secondary { background: var(--bg-surface); color: var(--text-primary); border-color: var(--border-strong); }
+.btn-secondary:hover { background: var(--bg-elevated); border-color: var(--text-secondary); }
+.btn-danger { background: var(--bg-surface); color: var(--danger); border-color: var(--border-strong); }
+.btn-danger:hover { background: var(--danger); color: var(--text-inverse); border-color: var(--danger); }
+
+.grid { display: grid; gap: 1.5rem; }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.flex { display: flex; gap: 0.75rem; }
+
+/* Progress & Charts */
+.chart-container { display: flex; align-items: flex-end; justify-content: space-between; height: 160px; gap: 0.5rem; margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle); }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 0.5rem; position: relative; }
+.bar { width: 100%; max-width: 40px; background: var(--accent); border-radius: 6px 6px 0 0; transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); min-height: 4px; opacity: 0.85; cursor: pointer; }
+.bar:hover { opacity: 1; transform: scaleY(1.02); transform-origin: bottom; }
+.bar-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+
+/* Circular Progress */
+.progress-circle { position: relative; width: 64px; height: 64px; border-radius: 50%; background: conic-gradient(var(--accent) var(--progress, 0%), var(--border-subtle) 0%); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
+.progress-circle::after { content: ""; position: absolute; width: 50px; height: 50px; background: var(--bg-surface); border-radius: 50%; }
+.progress-value { position: relative; z-index: 1; font-weight: 700; font-size: 0.9rem; color: var(--text-primary); }
+
+/* Priority Badge */
+.priority-badge { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 4px; letter-spacing: 0.05em; background: var(--accent-light); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.2); }
+.priority-1 { background: rgba(245, 158, 11, 0.15); color: #B45309; border-color: rgba(245, 158, 11, 0.3); }
+
+/* Github Style Heatmap */
+.heatmap-container { width: 100%; overflow-x: auto; padding-bottom: 0.5rem; }
+.heatmap-container::-webkit-scrollbar { height: 6px; }
+.heatmap-container::-webkit-scrollbar-track { background: var(--bg-base); border-radius: 4px; }
+.heatmap-container::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+.heatmap { display: inline-grid; grid-template-rows: 20px repeat(7, 14px); gap: 4px; }
+.heatmap-cell { width: 14px; height: 14px; border-radius: 3px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; }
+.heatmap-cell:hover { transform: scale(1.15); box-shadow: 0 0 4px rgba(0,0,0,0.2); z-index: 2; }
+.heatmap-cell.level-none { background-color: #F1F5F9; } 
+.heatmap-cell.level-0 { background-color: #E2E8F0; } 
+.heatmap-cell.level-1 { background-color: #93C5FD; } 
+.heatmap-cell.level-2 { background-color: #3B82F6; } 
+.heatmap-cell.level-3 { background-color: #1D4ED8; } 
+.heatmap-cell.level-4 { background-color: #1E3A8A; } 
+.month-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; align-self: end; padding-bottom: 2px; }
+
+/* Lists & Tasks */
+.check-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 0.75rem; background: var(--bg-surface); transition: all 0.2s ease; animation: slideInRight 0.3s ease-out forwards; }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+.check-item:hover { background: var(--bg-elevated); border-color: var(--border-strong); transform: translateX(4px); }
+.check-item.done { opacity: 0.7; background: var(--bg-base); }
+.check-item.done .check-title { color: var(--text-muted); text-decoration: line-through; }
+.check-title { flex: 1; font-size: 0.95rem; font-weight: 500; transition: color 0.2s; }
+.btn-delete { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.4rem; border-radius: 6px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.btn-delete:hover { color: var(--danger); background: var(--danger-light); transform: scale(1.1); }
+
+/* Week Strip */
+.date-selector { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; }
+.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; flex: 1; }
+.day-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 0.75rem 0.25rem; text-align: center; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.day-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.day-card.active { border-color: var(--accent); background: var(--accent); color: var(--text-inverse); box-shadow: 0 4px 12px var(--accent-shadow); transform: translateY(-4px); }
+.day-card.active .day-name, .day-card.active .day-date { color: var(--text-inverse); }
+.day-name { font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.2s; }
+.day-date { font-size: 1.125rem; font-weight: 700; margin-top: 0.25rem; color: var(--text-primary); transition: color 0.2s; }
+
+/* Copyright Footer */
+.app-footer { text-align: center; padding: 2rem 1rem 1rem 1rem; color: var(--text-muted); font-size: 0.875rem; font-weight: 500; margin-top: auto; }
+
+/* Toasts */
+#toast-container { position: fixed; bottom: 5rem; right: 1rem; display: flex; flex-direction: column; gap: 0.75rem; z-index: 9999; }
+@media(min-width:768px){ #toast-container { bottom: 2rem; right: 2rem; } }
+.toast { padding: 1rem 1.5rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; box-shadow: var(--shadow-hover); animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s 2.7s forwards; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-subtle); border-left: 4px solid var(--accent); display: flex; align-items: center; gap: 0.5rem; }
+@keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+
+/* Full-Screen Interactive Modal */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10000; opacity: 0; visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+.modal-content {
+  background: var(--bg-surface); padding: 2.5rem; border-radius: 16px;
+  max-width: 600px; width: 90%; position: relative;
+  transform: scale(0.95) translateY(20px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-xl); border: 1px solid var(--border-subtle);
+}
+.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+.modal-close {
+  position: absolute; top: 1rem; right: 1rem; background: var(--bg-elevated); border: none;
+  font-size: 1.25rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; 
+  color: var(--text-secondary); display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.modal-close:hover { color: var(--danger); background: var(--danger-light); transform: rotate(90deg); }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand" onclick="openMotivationModal()" title="Click for daily motivation">
+      <img src="logo.png" alt="Logo" class="brand-logo">
+      <span class="brand-text">Road to MIT</span>
+    </div>
+    <div class="save-indicator" id="save-mobile">Saved at --:--</div>
+  </header>
+
+  <nav class="nav">
+    <div class="nav-brand brand" onclick="openMotivationModal()" title="Click for daily motivation">
+      <img src="logo.png" alt="Logo" class="brand-logo">
+      <span class="brand-text">Road to MIT</span>
+    </div>
+    <a href="#/dashboard" class="nav-link active" data-route="dashboard">Dashboard</a>
+    <a href="#/daily" class="nav-link" data-route="daily">Daily Track</a>
+    <a href="#/weekly" class="nav-link" data-route="weekly">Monthly & Weekly</a>
+    <a href="#/settings" class="nav-link" data-route="settings">Settings / Data</a>
+  </nav>
+
+  <div class="main-wrapper">
+    <main class="main-content">
+      <div class="card-header">
+        <h2 id="page-title">Dashboard</h2>
+        <div class="save-indicator" id="save-desktop">Saved at --:--</div>
+      </div>
+      <div id="content"></div>
+    </main>
+    <footer class="app-footer">
+      &copy; VR_Tech
+    </footer>
+  </div>
+</div>
+
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- Motivational Modal -->
+<div id="motivation-modal" class="modal-overlay" onclick="handleModalOverlayClick(event)">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeMotivationModal()" title="Close (Esc)">&times;</button>
+    <h2 style="font-family: 'Noto Serif Display', serif; font-style: italic; margin-bottom: 1.5rem; text-align: center; color: var(--text-primary);">Road to MIT</h2>
+    <div id="modal-quote-container" class="quote-card" style="margin-bottom: 2rem;"></div>
+    <div id="modal-priority-container" class="card" style="border-left: 4px solid var(--warning); background: linear-gradient(to right, rgba(245, 158, 11, 0.05), var(--bg-surface)); margin-bottom: 0;"></div>
+  </div>
+</div>
+
+<script>
+// --- Daily Quotes Database ---
+const dailyQuotes = [
+  { "day": 1, "quote": "You have power over your mind, not outside events. Realize this, and you will find strength.", "author": "Marcus Aurelius" },
+  { "day": 2, "quote": "He who fears death will never do anything worthy of a man who is alive.", "author": "Seneca" },
+  { "day": 3, "quote": "The only limit to our realization of tomorrow is our doubts of today.", "author": "Franklin D. Roosevelt" }
+  // Expand with full 365 JSON array items as needed
+];
+
+// --- State Management ---
+const STORAGE_KEY = 'vr-road-to-mit:v4';
+let state = { dailyTasks: {}, weeklyGoals: {}, monthlyGoals: {}, lastUpdate: null };
+let selectedDate = new Date();
+
+// Helper: Format Date to YYYY-MM-DD local
+function getYYYYMMDD(d) {
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offset).toISOString().split('T')[0];
+}
+
+// Helper: Get ISO Week string (YYYY-Www)
+function getWeekString(d) {
+  const date = new Date(d.getTime());
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  const weekNumber = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  return `${date.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+}
+
+// Helper: Format Date to YYYY-MM
+function getYYYYMM(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// Helper: Get Day of the Year (1 - 365/366)
+function getDayOfYear(date) {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
+  const oneDay = 1000 * 60 * 60 * 24;
+  return Math.floor(diff / oneDay);
+}
+
+// Init State
+try {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) state = JSON.parse(raw);
+} catch(e) { console.error("Load failed", e); }
+
+if (!state.dailyTasks) state.dailyTasks = {};
+if (!state.weeklyGoals) state.weeklyGoals = {};
+if (!state.monthlyGoals) state.monthlyGoals = {};
+
+function saveData() {
+  state.lastUpdate = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  document.getElementById('save-mobile').textContent = `Auto-saved ${time}`;
+  document.getElementById('save-desktop').textContent = `Auto-saved ${time}`;
+}
+
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span>✓</span> ${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// --- Data Operations ---
+function generateId() { return Math.random().toString(36).substr(2, 9); }
+
+function addDailyTask(e) {
+  e.preventDefault();
+  const input = document.getElementById('new-task-input');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  const dateStr = getYYYYMMDD(selectedDate);
+  if (!state.dailyTasks[dateStr]) state.dailyTasks[dateStr] = [];
+  
+  state.dailyTasks[dateStr].push({ id: generateId(), text, done: false });
+  input.value = '';
+  saveData();
+  renderView(); 
+  showToast('Task added');
+}
+
+function toggleDailyTask(dateStr, id) {
+  const task = state.dailyTasks[dateStr].find(t => t.id === id);
+  if (task) { task.done = !task.done; saveData(); renderView(); }
+}
+
+function deleteDailyTask(dateStr, id) {
+  state.dailyTasks[dateStr] = state.dailyTasks[dateStr].filter(t => t.id !== id);
+  saveData(); renderView(); showToast('Task deleted');
+}
+
+function addMonthlyGoal(e) {
+  e.preventDefault();
+  const input = document.getElementById('new-monthly-input');
+  const monthInput = document.getElementById('month-selector').value;
+  const text = input.value.trim();
+  if (!text || !monthInput) return;
+
+  if (!state.monthlyGoals[monthInput]) state.monthlyGoals[monthInput] = [];
+  if (state.monthlyGoals[monthInput].length >= 3) {
+    showToast('Maximum 3 monthly goals allowed');
+    return;
+  }
+  
+  state.monthlyGoals[monthInput].push({ id: generateId(), text, done: false });
+  input.value = '';
+  saveData();
+  renderView();
+  showToast('Monthly goal added');
+}
+
+function toggleMonthlyGoal(monthStr, id) {
+  const goal = state.monthlyGoals[monthStr].find(g => g.id === id);
+  if (goal) { goal.done = !goal.done; saveData(); renderView(); }
+}
+
+function deleteMonthlyGoal(monthStr, id) {
+  state.monthlyGoals[monthStr] = state.monthlyGoals[monthStr].filter(g => g.id !== id);
+  saveData(); renderView(); showToast('Monthly goal deleted');
+}
+
+function addWeeklyGoal(e) {
+  e.preventDefault();
+  const input = document.getElementById('new-goal-input');
+  const weekInput = document.getElementById('week-selector').value;
+  const text = input.value.trim();
+  if (!text || !weekInput) return;
+  
+  if (!state.weeklyGoals[weekInput]) state.weeklyGoals[weekInput] = [];
+  state.weeklyGoals[weekInput].push({ id: generateId(), text, done: false });
+  
+  input.value = '';
+  saveData();
+  renderView();
+  showToast('Weekly objective added');
+}
+
+function toggleWeeklyGoal(weekStr, id) {
+  const goal = state.weeklyGoals[weekStr].find(g => g.id === id);
+  if (goal) { goal.done = !goal.done; saveData(); renderView(); }
+}
+
+function deleteWeeklyGoal(weekStr, id) {
+  state.weeklyGoals[weekStr] = state.weeklyGoals[weekStr].filter(g => g.id !== id);
+  saveData(); renderView(); showToast('Weekly objective deleted');
+}
+
+function resetData() {
+  if (confirm("Are you sure you want to delete ALL data? This action cannot be undone.")) {
+    state = { dailyTasks: {}, weeklyGoals: {}, monthlyGoals: {}, lastUpdate: null };
+    saveData(); renderView(); showToast("All data has been reset.");
+  }
+}
+
+// --- Import / Export ---
+function exportData() {
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `VR-RoadToMIT-Backup-${getYYYYMMDD(new Date())}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast("Backup downloaded successfully");
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      const importedState = JSON.parse(event.target.result);
+      if (importedState.dailyTasks) {
+        state = importedState;
+        if (!state.monthlyGoals) state.monthlyGoals = {};
+        saveData(); renderView(); showToast("Data restored successfully");
+      } else { showToast("Invalid backup file format"); }
+    } catch(err) { showToast("Error parsing file"); }
+  };
+  reader.readAsText(file);
+}
+
+// --- Modal Functionality ---
+function openMotivationModal() {
+  const today = new Date();
+  const currentDayOfYear = getDayOfYear(today);
+  const currentMonthStr = getYYYYMM(today);
+  
+  let dailyQuote = dailyQuotes.find(q => q.day === currentDayOfYear) || 
+                   dailyQuotes[(currentDayOfYear % dailyQuotes.length) || 0] || 
+                   { quote: "Set your goals high, and don't stop till you get there.", author: "Bo Jackson" };
+
+  const mGoals = state.monthlyGoals[currentMonthStr] || [];
+  const topGoal = mGoals.length > 0 ? mGoals[0] : null;
+
+  document.getElementById('modal-quote-container').innerHTML = `
+    <div class="quote-text" style="font-size: 1.35rem;">"${dailyQuote.quote}"</div>
+    <div class="quote-author" style="margin-top: 1rem; text-align: right;">&mdash; ${dailyQuote.author}</div>
+  `;
+
+  document.getElementById('modal-priority-container').innerHTML = `
+    <h3 class="card-title" style="font-size: 1rem; color: var(--warning); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      Month's Primary Priority
+    </h3>
+    <p style="font-size: 1.15rem; font-weight: 600; color: var(--text-primary); ${topGoal && topGoal.done ? 'text-decoration: line-through; opacity: 0.6;' : ''}">
+      ${topGoal ? topGoal.text : '<em>No primary goal set for this month. Set one in the Milestones tab!</em>'}
+    </p>
+  `;
+
+  document.getElementById('motivation-modal').classList.add('active');
+}
+
+function closeMotivationModal() {
+  document.getElementById('motivation-modal').classList.remove('active');
+}
+
+function handleModalOverlayClick(e) {
+  if (e.target.id === 'motivation-modal') {
+    closeMotivationModal();
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeMotivationModal();
+});
+
+// --- Dashboard Renderers ---
+function renderHeatmap() {
+  const today = new Date();
+  const yearAgo = new Date(today);
+  yearAgo.setDate(today.getDate() - 364);
+  
+  const startDayOffset = yearAgo.getDay(); 
+  const totalCells = 365 + startDayOffset;
+  
+  let cellsHTML = '';
+  let currentMonth = -1;
+  let col = 1;
+  
+  for (let i = 0; i < totalCells; i++) {
+    const dayOfWeek = i % 7; 
+    if (dayOfWeek === 0 && i > 0) col++;
+    
+    if (i < startDayOffset) continue; 
+    
+    const d = new Date(yearAgo);
+    d.setDate(yearAgo.getDate() + (i - startDayOffset));
+    const dateStr = getYYYYMMDD(d);
+    
+    if (d.getDate() === 1 || currentMonth === -1) {
+      if (d.getMonth() !== currentMonth) {
+        cellsHTML += `<div class="month-label" style="grid-row: 1; grid-column: ${col} / span 4;">${d.toLocaleDateString('en-US', {month: 'short'})}</div>`;
+        currentMonth = d.getMonth();
+      }
+    }
+    
+    const tasks = state.dailyTasks[dateStr] || [];
+    const count = tasks.length;
+    const done = tasks.filter(t => t.done).length;
+    
+    let level = 'none';
+    if (count > 0) {
+      const pct = done / count;
+      if (pct === 1) level = 4;
+      else if (pct >= 0.67) level = 3;
+      else if (pct >= 0.34) level = 2;
+      else if (pct > 0) level = 1;
+      else level = 0;
+    }
+    
+    cellsHTML += `<div class="heatmap-cell level-${level}" style="grid-row: ${dayOfWeek + 2}; grid-column: ${col};" title="${d.toDateString()}: ${done}/${count} tasks completed"></div>`;
+  }
+  
+  return `
+    <div class="card" style="margin-top: 1.5rem;">
+      <h3 class="card-title" style="margin-bottom: 1rem;">1-Year Consistency Tracker</h3>
+      <div class="heatmap-container">
+        <div class="heatmap">${cellsHTML}</div>
+      </div>
+      <div class="flex" style="justify-content: flex-end; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem;">
+        <span>No Tasks</span>
+        <div class="heatmap-cell level-none"></div>
+        <div style="width: 10px;"></div>
+        <span>0%</span>
+        <div class="heatmap-cell level-0"></div>
+        <div class="heatmap-cell level-1"></div>
+        <div class="heatmap-cell level-2"></div>
+        <div class="heatmap-cell level-3"></div>
+        <div class="heatmap-cell level-4"></div>
+        <span>100%</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderDashboard() {
+  const today = new Date();
+  const currentDayOfYear = getDayOfYear(today);
+  const currentMonthStr = getYYYYMM(today);
+  
+  let dailyQuote = dailyQuotes.find(q => q.day === currentDayOfYear) || 
+                   dailyQuotes[(currentDayOfYear % dailyQuotes.length) || 0] || 
+                   { quote: "Set your goals high, and don't stop till you get there.", author: "Bo Jackson" };
+
+  const mGoals = state.monthlyGoals[currentMonthStr] || [];
+  const topGoal = mGoals.length > 0 ? mGoals[0] : null;
+
+  const days = [];
+  let totalTasks = 0;
+  let totalDone = 0;
+  
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = getYYYYMMDD(d);
+    const tasks = state.dailyTasks[dateStr] || [];
+    const done = tasks.filter(t => t.done).length;
+    const count = tasks.length;
+    const percentage = count === 0 ? 0 : Math.round((done / count) * 100);
+    
+    totalTasks += count;
+    totalDone += done;
+    days.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), percentage });
+  }
+
+  const avgCompletion = totalTasks === 0 ? 0 : Math.round((totalDone / totalTasks) * 100);
+
+  setTimeout(() => {
+    document.querySelectorAll('.bar').forEach(bar => { bar.style.height = bar.getAttribute('data-height'); });
+  }, 50);
+
+  return `
+    <div class="quote-card">
+      <div class="quote-text">"${dailyQuote.quote}"</div>
+      <div class="quote-author">&mdash; ${dailyQuote.author}</div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--warning); background: linear-gradient(to right, rgba(245, 158, 11, 0.05), var(--bg-surface));">
+      <div class="flex" style="align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+        <h3 class="card-title" style="font-size: 1rem; color: var(--warning); display: flex; align-items: center; gap: 0.5rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          Month's Primary Priority
+        </h3>
+        <span class="text-muted" style="font-size: 0.8rem; font-weight: 500;">${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+      </div>
+      <p style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-top: 0.5rem; ${topGoal && topGoal.done ? 'text-decoration: line-through; opacity: 0.6;' : ''}">
+        ${topGoal ? topGoal.text : '<em>No primary goal set for this month. Set one in the Milestones tab.</em>'}
+      </p>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card" style="display: flex; flex-direction: column;">
+        <h3 class="card-title" style="margin-bottom: 0.5rem;">7-Day Activity Stream</h3>
+        <p class="text-muted">Completed <strong>${totalDone}</strong> out of <strong>${totalTasks}</strong> tasks.</p>
+        <div class="chart-container">
+          ${days.map(day => `
+            <div class="bar-wrap" title="${day.percentage}%">
+              <div class="bar" data-height="${day.percentage}%" style="height: 0%;"></div>
+              <span class="bar-label">${day.label}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div class="flex" style="flex-direction: column; gap: 1.5rem;">
+        <div class="card" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0;">
+          <div>
+            <h3 class="card-title" style="margin-bottom: 0.25rem;">Weekly Progress</h3>
+            <p class="text-muted" style="font-size: 0.875rem;">Completion over the last 7 days</p>
+          </div>
+          <div class="progress-circle" style="--progress: ${avgCompletion}%">
+            <span class="progress-value">${avgCompletion}%</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 0; flex: 1;">
+          <h3 class="card-title" style="margin-bottom: 1rem;">Quick Shortcuts</h3>
+          <div class="flex" style="flex-direction: column; gap: 0.75rem;">
+            <button class="btn btn-primary" style="width: 100%;" onclick="window.location.hash='#/daily'">Log Daily Data</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="window.location.hash='#/weekly'">Set Milestones</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    ${renderHeatmap()}
+  `;
+}
+
+// --- Views ---
+function changeDate(offset) { selectedDate.setDate(selectedDate.getDate() + offset); renderView(); }
+function setDateFromCard(dateString) { selectedDate = new Date(dateString + 'T00:00:00'); renderView(); }
+
+function renderDaily() {
+  const startOfWeek = new Date(selectedDate);
+  startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); 
+  
+  let stripHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startOfWeek);
+    d.setDate(startOfWeek.getDate() + i);
+    const dStr = getYYYYMMDD(d);
+    const isSelected = dStr === getYYYYMMDD(selectedDate);
+    stripHTML += `
+      <div class="day-card ${isSelected ? 'active' : ''}" onclick="setDateFromCard('${dStr}')">
+        <div class="day-name">${d.toLocaleDateString('en-US', {weekday: 'short'})}</div>
+        <div class="day-date">${d.getDate()}</div>
+      </div>
+    `;
+  }
+
+  const dateStr = getYYYYMMDD(selectedDate);
+  const tasks = state.dailyTasks[dateStr] || [];
+
+  return `
+    <div class="date-selector">
+      <button class="btn btn-secondary" onclick="changeDate(-7)" title="Previous Week">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="week-strip">${stripHTML}</div>
+      <button class="btn btn-secondary" onclick="changeDate(7)" title="Next Week">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom: 1.5rem;">Daily Execution: ${selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric'})}</h3>
+      
+      <form class="flex" style="margin-bottom: 2rem;" onsubmit="addDailyTask(event)">
+        <input type="text" id="new-task-input" placeholder="What needs to be conquered today?" required autocomplete="off">
+        <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Add Task</button>
+      </form>
+
+      <div id="task-list">
+        ${tasks.length === 0 ? '<div style="text-align: center; padding: 3rem 0; color: var(--text-muted); background: var(--bg-base); border-radius: 8px; border: 1px dashed var(--border-strong);">No tasks logged for this date. Start planning!</div>' : ''}
+        ${tasks.map(t => `
+          <div class="check-item ${t.done ? 'done' : ''}">
+            <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleDailyTask('${dateStr}', '${t.id}')">
+            <div class="check-title">${t.text}</div>
+            <button class="btn-delete" onclick="deleteDailyTask('${dateStr}', '${t.id}')" title="Delete Task">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderWeekly() {
+  const currentWeekStr = getWeekString(new Date());
+  const currentMonthStr = getYYYYMM(new Date());
+  
+  const existingWeekInput = document.getElementById('week-selector');
+  const activeWeekStr = existingWeekInput ? existingWeekInput.value : currentWeekStr;
+  
+  const existingMonthInput = document.getElementById('month-selector');
+  const activeMonthStr = existingMonthInput ? existingMonthInput.value : currentMonthStr;
+  
+  const wGoals = state.weeklyGoals[activeWeekStr] || [];
+  const mGoals = state.monthlyGoals[activeMonthStr] || [];
+
+  const labels = ["1st Priority", "2nd Priority", "3rd Priority"];
+
+  return `
+    <!-- Monthly Goals Section -->
+    <div class="card" style="border-top: 4px solid var(--warning);">
+      <div class="flex" style="align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <h3 class="card-title">Main Monthly Goals (Max 3)</h3>
+        <input type="month" id="month-selector" value="${activeMonthStr}" onchange="renderView()" style="width: auto; cursor: pointer;">
+      </div>
+      
+      ${mGoals.length < 3 ? `
+      <form class="flex" style="margin-bottom: 2rem;" onsubmit="addMonthlyGoal(event)">
+        <input type="text" id="new-monthly-input" placeholder="Define priority ${mGoals.length + 1} for this month..." required autocomplete="off">
+        <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Add Monthly</button>
+      </form>` : '<div class="text-muted" style="margin-bottom: 2rem; font-size: 0.875rem;">You have defined your 3 main priorities for this month.</div>'}
+
+      <div id="monthly-goal-list">
+        ${mGoals.length === 0 ? '<div style="text-align: center; padding: 2rem 0; color: var(--text-muted); background: var(--bg-base); border-radius: 8px; border: 1px dashed var(--border-strong);">No monthly priorities set.</div>' : ''}
+        ${mGoals.map((g, index) => `
+          <div class="check-item ${g.done ? 'done' : ''}">
+            <input type="checkbox" ${g.done ? 'checked' : ''} onchange="toggleMonthlyGoal('${activeMonthStr}', '${g.id}')">
+            <div class="check-title flex" style="align-items: center; gap: 0.75rem;">
+              <span class="priority-badge ${index === 0 ? 'priority-1' : ''}">${labels[index]}</span>${g.text}
+            </div>
+            <button class="btn-delete" onclick="deleteMonthlyGoal('${activeMonthStr}', '${g.id}')" title="Delete Goal">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Weekly Objectives Section -->
+    <div class="card" style="border-top: 4px solid var(--accent);">
+      <div class="flex" style="align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <h3 class="card-title">Macro Weekly Objectives</h3>
+        <input type="week" id="week-selector" value="${activeWeekStr}" onchange="renderView()" style="width: auto; cursor: pointer;">
+      </div>
+      
+      <form class="flex" style="margin-bottom: 2rem;" onsubmit="addWeeklyGoal(event)">
+        <input type="text" id="new-goal-input" placeholder="Define a major milestone for this week..." required autocomplete="off">
+        <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Add Weekly</button>
+      </form>
+
+      <div id="goal-list">
+        ${wGoals.length === 0 ? '<div style="text-align: center; padding: 2rem 0; color: var(--text-muted); background: var(--bg-base); border-radius: 8px; border: 1px dashed var(--border-strong);">No weekly objectives set.</div>' : ''}
+        ${wGoals.map(g => `
+          <div class="check-item ${g.done ? 'done' : ''}">
+            <input type="checkbox" ${g.done ? 'checked' : ''} onchange="toggleWeeklyGoal('${activeWeekStr}', '${g.id}')">
+            <div class="check-title">${g.text}</div>
+            <button class="btn-delete" onclick="deleteWeeklyGoal('${activeWeekStr}', '${g.id}')" title="Delete Goal">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSettings() {
+  return `
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom: 1rem;">System & Data Settings</h3>
+      <p class="text-muted" style="margin-bottom: 2rem;">Everything is saved locally in your browser and updates automatically. Use these tools to secure your data.</p>
+      
+      <div class="grid grid-2">
+        <div style="border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: 12px; background: var(--bg-elevated);">
+          <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">Export Backup</h4>
+          <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 1.5rem;">Download a secure JSON copy of your complete timeline.</p>
+          <button class="btn btn-primary" style="width: 100%;" onclick="exportData()">Download File</button>
+        </div>
+        
+        <div style="border: 1px solid var(--border-subtle); padding: 1.5rem; border-radius: 12px; background: var(--bg-elevated);">
+          <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">Restore Data</h4>
+          <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 1.5rem;">Upload a previous JSON backup to overwrite current state.</p>
+          <label class="btn btn-secondary" style="width: 100%; display: flex; justify-content: center; cursor: pointer;">
+            Select Backup File
+            <input type="file" accept=".json" style="display: none;" onchange="importData(event)">
+          </label>
+        </div>
+      </div>
+      
+      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-subtle);">
+        <h4 style="margin-bottom: 0.5rem; color: var(--danger);">Danger Zone</h4>
+        <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">Permanently delete all tasks, goals, and history.</p>
+        <button class="btn btn-danger" onclick="resetData()">Factory Reset Data</button>
+      </div>
+    </div>
+  `;
+}
+
+// --- Router Engine ---
+function renderView() {
+  const hash = window.location.hash || '#/dashboard';
+  const route = hash.replace('#/', '');
+  
+  let readableTitle = route.charAt(0).toUpperCase() + route.slice(1);
+  if (route === 'settings') readableTitle = 'Settings & Data';
+  if (route === 'daily') readableTitle = 'Daily Execution';
+  if (route === 'weekly') readableTitle = 'Monthly & Weekly Milestones';
+  
+  document.getElementById('page-title').textContent = readableTitle;
+  
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.toggle('active', link.getAttribute('data-route') === route);
+  });
+
+  const content = document.getElementById('content');
+  if (route === 'dashboard') content.innerHTML = renderDashboard();
+  else if (route === 'daily') content.innerHTML = renderDaily();
+  else if (route === 'weekly') content.innerHTML = renderWeekly();
+  else if (route === 'settings') content.innerHTML = renderSettings();
+  else content.innerHTML = `<div class="card"><p class="text-muted">404 - Module not found</p></div>`;
+}
+
+window.addEventListener('hashchange', renderView);
+window.addEventListener('load', () => {
+  renderView();
+  saveData();
+});
+</script>
+</body>
+</html>
