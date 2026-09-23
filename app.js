@@ -834,7 +834,14 @@ window.addEventListener('load', () => {
     if (user) {
       currentUser = user;
       authView.style.display = 'none';
-      appView.style.display = 'block';
+      appView.style.display = 'flex';
+      
+      // Populate user profile in nav/topbar
+      const displayName = user.displayName || user.email || 'User';
+      const initial = displayName.charAt(0).toUpperCase();
+      document.querySelectorAll('.user-name').forEach(el => el.textContent = displayName.split('@')[0]);
+      document.querySelectorAll('.user-avatar').forEach(el => el.textContent = initial);
+      
       loadDataFromFirebase(user.uid);
     } else {
       currentUser = null;
