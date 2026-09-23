@@ -6,7 +6,7 @@
 
 // --- Firebase Integration ---
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js';
 import { firebaseConfig } from './firebase-config.js';
 
@@ -794,11 +794,18 @@ document.getElementById('btn-signup-email').addEventListener('click', async () =
   }
 });
 
-document.getElementById('btn-login-google').addEventListener('click', async () => {
+document.getElementById('btn-login-google').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = 'Loading...';
+  btn.disabled = true;
+  
   const provider = new GoogleAuthProvider();
   try {
     await signInWithRedirect(auth, provider);
   } catch (err) {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
     document.getElementById('auth-error').textContent = err.message;
     document.getElementById('auth-error').style.display = 'block';
   }
@@ -813,6 +820,12 @@ document.getElementById('btn-logout-desktop').addEventListener('click', handleLo
 // --- Lifecycle Event Listeners ---
 window.addEventListener('hashchange', renderView);
 window.addEventListener('load', () => {
+  // Check if we just came back from a Google Redirect and if there was an error
+  getRedirectResult(auth).catch((error) => {
+    document.getElementById('auth-error').textContent = 'Login failed: ' + error.message;
+    document.getElementById('auth-error').style.display = 'block';
+  });
+
   // Listen for auth state changes to show/hide app and load data
   onAuthStateChanged(auth, (user) => {
     const authView = document.getElementById('auth-view');
