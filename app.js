@@ -4,6 +4,17 @@
  */
 'use strict';
 
+// --- Firebase Integration ---
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js';
+import { firebaseConfig } from './firebase-config.js';
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+let currentUser = null;
+
 // --- Daily Quotes Database ---
 const dailyQuotes = [
   { "day": 1, "quote": "You have power over your mind, not outside events. Realize this, and you will find strength.", "author": "Marcus Aurelius" },
@@ -83,35 +94,50 @@ function getDayOfYear(date) {
   return Math.floor(diff / oneDay);
 }
 
-// Init State with validation
-try {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') {
-      state = parsed;
-    }
-  }
-} catch (e) {
-  console.error("Load failed", e);
+// Helper to ensure state structure is valid
+function initStateDefaults() {
+  if (!state.dailyTasks || typeof state.dailyTasks !== 'object') state.dailyTasks = {};
+  if (!state.weeklyGoals || typeof state.weeklyGoals !== 'object') state.weeklyGoals = {};
+  if (!state.monthlyGoals || typeof state.monthlyGoals !== 'object') state.monthlyGoals = {};
 }
 
-if (!state.dailyTasks || typeof state.dailyTasks !== 'object') state.dailyTasks = {};
-if (!state.weeklyGoals || typeof state.weeklyGoals !== 'object') state.weeklyGoals = {};
-if (!state.monthlyGoals || typeof state.monthlyGoals !== 'object') state.monthlyGoals = {};
+// Data is now loaded via Firebase onAuthStateChanged
+initStateDefaults();
 
-function saveData() {
-  state.lastUpdate = new Date().toISOString();
+async function loadDataFromFirebase(uid) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const docRef = doc(db, 'users', uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      state = data.trackerData || { dailyTasks: {}, weeklyGoals: {}, monthlyGoals: {}, lastUpdate: null };
+    } else {
+      state = { dailyTasks: {}, weeklyGoals: {}, monthlyGoals: {}, lastUpdate: null };
+    }
+    initStateDefaults();
+    renderView();
   } catch (err) {
-    console.error("Failed to save data to localStorage:", err);
+    console.error("Failed to load data from Firestore:", err);
+    showToast("Error loading data");
   }
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const saveMobile = document.getElementById('save-mobile');
-  const saveDesktop = document.getElementById('save-desktop');
-  if (saveMobile) saveMobile.textContent = `Auto-saved ${time}`;
-  if (saveDesktop) saveDesktop.textContent = `Auto-saved ${time}`;
+}
+
+async function saveData() {
+  state.lastUpdate = new Date().toISOString();
+  
+  if (currentUser) {
+    try {
+      await setDoc(doc(db, 'users', currentUser.uid), { trackerData: state }, { merge: true });
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const saveMobile = document.getElementById('save-mobile');
+      const saveDesktop = document.getElementById('save-desktop');
+      if (saveMobile) saveMobile.textContent = `Auto-saved ${time}`;
+      if (saveDesktop) saveDesktop.textContent = `Auto-saved ${time}`;
+    } catch (err) {
+      console.error("Failed to save data to Firestore:", err);
+      showToast("Error saving data");
+    }
+  }
 }
 
 function showToast(msg) {
@@ -739,9 +765,70 @@ window.changeDate = changeDate;
 window.setDateFromCard = setDateFromCard;
 window.renderView = renderView;
 
+// --- Auth UI Listeners ---
+document.getElementById('btn-login-email').addEventListener('click', async () => {
+  const email = document.getElementById('auth-email').value;
+  const password = document.getElementById('auth-password').value;
+  const errDiv = document.getElementById('auth-error');
+  if (!email || !password) { errDiv.textContent = 'Please enter email and password'; errDiv.style.display = 'block'; return; }
+  try {
+    errDiv.style.display = 'none';
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    errDiv.textContent = err.message;
+    errDiv.style.display = 'block';
+  }
+});
+
+document.getElementById('btn-signup-email').addEventListener('click', async () => {
+  const email = document.getElementById('auth-email').value;
+  const password = document.getElementById('auth-password').value;
+  const errDiv = document.getElementById('auth-error');
+  if (!email || !password) { errDiv.textContent = 'Please enter email and password'; errDiv.style.display = 'block'; return; }
+  try {
+    errDiv.style.display = 'none';
+    await createUserWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    errDiv.textContent = err.message;
+    errDiv.style.display = 'block';
+  }
+});
+
+document.getElementById('btn-login-google').addEventListener('click', async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (err) {
+    document.getElementById('auth-error').textContent = err.message;
+    document.getElementById('auth-error').style.display = 'block';
+  }
+});
+
+const handleLogout = async () => {
+  await signOut(auth);
+};
+document.getElementById('btn-logout-mobile').addEventListener('click', handleLogout);
+document.getElementById('btn-logout-desktop').addEventListener('click', handleLogout);
+
 // --- Lifecycle Event Listeners ---
 window.addEventListener('hashchange', renderView);
 window.addEventListener('load', () => {
-  renderView();
-  saveData();
+  // Listen for auth state changes to show/hide app and load data
+  onAuthStateChanged(auth, (user) => {
+    const authView = document.getElementById('auth-view');
+    const appView = document.getElementById('app');
+    
+    if (user) {
+      currentUser = user;
+      authView.style.display = 'none';
+      appView.style.display = 'block';
+      loadDataFromFirebase(user.uid);
+    } else {
+      currentUser = null;
+      authView.style.display = 'flex';
+      appView.style.display = 'none';
+      state = { dailyTasks: {}, weeklyGoals: {}, monthlyGoals: {}, lastUpdate: null };
+      initStateDefaults();
+    }
+  });
 });
