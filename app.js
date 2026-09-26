@@ -15,13 +15,12 @@ const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 let currentUser = null;
 
-// --- Daily Quotes Database ---
-const dailyQuotes = [
-  { "day": 1, "quote": "You have power over your mind, not outside events. Realize this, and you will find strength.", "author": "Marcus Aurelius" },
-  { "day": 2, "quote": "He who fears death will never do anything worthy of a man who is alive.", "author": "Seneca" },
-  { "day": 3, "quote": "The only limit to our realization of tomorrow is our doubts of today.", "author": "Franklin D. Roosevelt" }
-  // Expand with full 365 JSON array items as needed
-];
+// --- Daily Quotes Database (loaded dynamically from quotes.json) ---
+let dailyQuotes = [];
+fetch('./quotes.json')
+  .then(res => res.json())
+  .then(data => { dailyQuotes = data; })
+  .catch(() => console.warn('Could not load quotes.json'));
 
 // --- Security & Sanitization Helpers (XSS Prevention & Defense) ---
 
@@ -145,7 +144,7 @@ function showToast(msg) {
   if (!container) return;
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.innerHTML = `<span>✓</span> ${escapeHTML(msg)}`;
+  toast.innerHTML = `<span>âœ“</span> ${escapeHTML(msg)}`;
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 3500);
 }
